@@ -1,0 +1,103 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+}
+
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background: #1f2937;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .logo {
+    padding: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.sidebar nav {
+    flex-grow: 1;
+}
+
+.sidebar a {
+    display: block;
+    padding: 12px 20px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    background: #374151;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 10px 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-gap: 20px;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.card-header .icon {
+    margin-right: 8px;
+}
+
+/* Chart container stretch */
+.chart-full {
+    width: 100%;
+    height: 100%;
+}
