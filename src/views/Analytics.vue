@@ -3,7 +3,7 @@
     <div class="analytics-container">
         <!-- Page Header -->
         <div class="page-header">
-            <div>
+            <div class="title-wrap">
                 <h2 class="page-title">Analytics</h2>
                 <nav class="breadcrumb">
                     <span>Cavill</span> &gt;
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <!-- KPI Strip -->
+        <!-- KPI Strip (fully responsive) -->
         <div class="kpi-strip">
             <div class="kpi-card">
                 <div class="kpi-label">Total Toilets</div>
@@ -44,8 +44,10 @@
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Ammonia (Good / Mod / Poor / N/A)</div>
-                <div class="kpi-value">{{ ammoniaCounts.good }} / {{ ammoniaCounts.moderate }} / {{ ammoniaCounts.poor
-                    }} / {{ ammoniaCounts.na }}</div>
+                <div class="kpi-value">
+                    {{ ammoniaCounts.good }} / {{ ammoniaCounts.moderate }} / {{ ammoniaCounts.poor }} / {{
+                        ammoniaCounts.na }}
+                </div>
             </div>
         </div>
 
@@ -72,7 +74,9 @@
             <div class="panel-header">
                 <h3>Region Summary</h3>
             </div>
-            <div class="panel-body">
+
+            <!-- Desktop/Tablet: Table -->
+            <div class="panel-body table-wrap hide-on-mobile">
                 <table class="table">
                     <thead>
                         <tr>
@@ -99,6 +103,39 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Mobile: Cards -->
+            <div class="panel-body show-on-mobile">
+                <div class="cards-list">
+                    <div class="summary-card" v-for="row in regionRows" :key="row.region">
+                        <div class="summary-title">{{ row.region }}</div>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="label">Toilets</div>
+                                <div class="value">{{ row.count }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">People In</div>
+                                <div class="value">{{ row.in }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">People Out</div>
+                                <div class="value">{{ row.out }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">Live Occ.</div>
+                                <div class="value">{{ row.occ }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">Avg. Util.</div>
+                                <div class="value">{{ (row.avgUtil * 100).toFixed(0) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="regionRows.length === 0" class="muted">No data</div>
+                </div>
+            </div>
         </section>
 
         <!-- Charts -->
@@ -107,23 +144,25 @@
                 <div class="panel-header">
                     <h3>Occupancy by Region</h3>
                 </div>
-                <div class="panel-body"><canvas ref="occByRegionRef" height="140"></canvas></div>
+                <div class="panel-body chart-body"><canvas ref="occByRegionRef"></canvas></div>
             </div>
             <div class="chart-card">
                 <div class="panel-header">
                     <h3>Ammonia Status Mix</h3>
                 </div>
-                <div class="panel-body"><canvas ref="ammoniaPieRef" height="140"></canvas></div>
+                <div class="panel-body chart-body"><canvas ref="ammoniaPieRef"></canvas></div>
             </div>
         </section>
 
-        <!-- Top 10 busiest -->
+        <!-- Top 10 Busiest -->
         <section class="panel">
             <div class="panel-header">
                 <h3>Top 10 Busiest (by Live Occupancy)</h3>
             </div>
-            <div class="panel-body">
-                <table class="table">
+
+            <!-- Desktop/Tablet: Table -->
+            <div class="panel-body table-wrap hide-on-mobile">
+                <table class="table minwide">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -151,8 +190,40 @@
                     </tbody>
                 </table>
             </div>
-        </section>
 
+            <!-- Mobile: Cards -->
+            <div class="panel-body show-on-mobile">
+                <div class="cards-list">
+                    <div class="busy-card" v-for="(t, i) in topBusiest" :key="t.id">
+                        <div class="busy-header">
+                            <div class="rank">#{{ i + 1 }}</div>
+                            <div class="name" :title="t.name">{{ t.name }}</div>
+                        </div>
+                        <div class="busy-tags">
+                            <span class="tag">{{ t.region }}</span>
+                            <span class="tag" v-if="t.venue">{{ t.venue }}</span>
+                        </div>
+                        <div class="busy-metrics">
+                            <div class="metric">
+                                <div class="label">Capacity</div>
+                                <div class="value">{{ t.capacity || '-' }}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Occupancy</div>
+                                <div class="value">{{ occupancy(t) }}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Utilization</div>
+                                <div class="value">{{ ((occupancy(t) / Math.max(1, t.capacity || 1)) * 100).toFixed(0)
+                                }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="topBusiest.length === 0" class="muted">No data</div>
+                </div>
+            </div>
+        </section>
     </div>
 </template>
 
@@ -172,21 +243,10 @@ function loadFromLocalStorage() {
     if (!saved) { toilets.value = []; return }
     try { toilets.value = JSON.parse(saved) } catch { toilets.value = [] }
 }
+function reload() { loadFromLocalStorage(); drawCharts() }
 
-function reload() {
-    loadFromLocalStorage()
-    drawCharts()
-}
-
-onMounted(() => {
-    loadFromLocalStorage()
-    drawCharts()
-})
-
-// Re-draw when filters or data change
-watch([() => toilets.value, query, region], () => {
-    drawCharts()
-}, { deep: true })
+onMounted(() => { loadFromLocalStorage(); drawCharts() })
+watch([() => toilets.value, query, region], () => { drawCharts() }, { deep: true })
 
 function matchQuery(t, q) {
     if (!q) return true
@@ -194,12 +254,7 @@ function matchQuery(t, q) {
     return hay.includes(q)
 }
 function showToilet(t) { return region.value === 'ALL' || t.region === region.value }
-function occupancy(t) {
-    const i = t.counters?.in ?? 0
-    const o = t.counters?.out ?? 0
-    const occ = i - o
-    return occ < 0 ? 0 : occ
-}
+function occupancy(t) { const i = t.counters?.in ?? 0, o = t.counters?.out ?? 0; return Math.max(0, i - o) }
 function ammoniaStatus(t) {
     const v = t.ammonia?.ppm
     if (v == null) return 'N/A'
@@ -224,11 +279,10 @@ const totals = computed(() => {
 })
 
 const avgUtilization = computed(() => {
-    if (filtered.value.length === 0) return 0
+    if (!filtered.value.length) return 0
     let sum = 0
     for (const t of filtered.value) {
-        const cap = Math.max(1, t.capacity || 1)
-        sum += occupancy(t) / cap
+        sum += occupancy(t) / Math.max(1, t.capacity || 1)
     }
     return sum / filtered.value.length
 })
@@ -249,7 +303,7 @@ const regionRows = computed(() => {
     const rows = []
     for (const r of REGIONS) {
         const list = filtered.value.filter(t => t.region === r)
-        if (list.length === 0) continue
+        if (!list.length) continue
         let inSum = 0, outSum = 0, occSum = 0, utilSum = 0
         for (const t of list) {
             inSum += t.counters?.in ?? 0
@@ -258,29 +312,19 @@ const regionRows = computed(() => {
             occSum += occ
             utilSum += occ / Math.max(1, t.capacity || 1)
         }
-        rows.push({
-            region: r,
-            count: list.length,
-            in: inSum,
-            out: outSum,
-            occ: occSum,
-            avgUtil: utilSum / list.length
-        })
+        rows.push({ region: r, count: list.length, in: inSum, out: outSum, occ: occSum, avgUtil: utilSum / list.length })
     }
     return rows
 })
 
 const topBusiest = computed(() => {
-    return [...filtered.value]
-        .sort((a, b) => occupancy(b) - occupancy(a))
-        .slice(0, 10)
+    return [...filtered.value].sort((a, b) => occupancy(b) - occupancy(a)).slice(0, 10)
 })
 
 /* Charts */
 const occByRegionRef = ref(null)
 const ammoniaPieRef = ref(null)
-let occByRegionChart = null
-let ammoniaPieChart = null
+let occByRegionChart = null, ammoniaPieChart = null
 
 function destroyCharts() {
     if (occByRegionChart) { occByRegionChart.destroy(); occByRegionChart = null }
@@ -288,37 +332,27 @@ function destroyCharts() {
 }
 
 function drawCharts() {
-    // Avoid drawing before mount
     if (!occByRegionRef.value || !ammoniaPieRef.value) return
     destroyCharts()
 
-    // Occupancy by Region (bar)
     const labels = regionRows.value.map(r => r.region)
     const dataOcc = regionRows.value.map(r => r.occ)
     occByRegionChart = new Chart(occByRegionRef.value.getContext('2d'), {
         type: 'bar',
-        data: {
-            labels,
-            datasets: [{ label: 'Live Occupancy', data: dataOcc }]
-        },
+        data: { labels, datasets: [{ label: 'Live Occupancy', data: dataOcc }] },
         options: {
+            responsive: true,
             maintainAspectRatio: false,
             scales: { y: { beginAtZero: true } },
             plugins: { legend: { display: false } }
         }
     })
 
-    // Ammonia status (pie)
     const ac = ammoniaCounts.value
     ammoniaPieChart = new Chart(ammoniaPieRef.value.getContext('2d'), {
         type: 'pie',
-        data: {
-            labels: ['Good', 'Moderate', 'Poor', 'N/A'],
-            datasets: [{ data: [ac.good, ac.moderate, ac.poor, ac.na] }]
-        },
-        options: {
-            maintainAspectRatio: false
-        }
+        data: { labels: ['Good', 'Moderate', 'Poor', 'N/A'], datasets: [{ data: [ac.good, ac.moderate, ac.poor, ac.na] }] },
+        options: { responsive: true, maintainAspectRatio: false }
     })
 }
 
@@ -326,8 +360,9 @@ onBeforeUnmount(() => destroyCharts())
 </script>
 
 <style scoped>
+/* Container */
 .analytics-container {
-    padding: 20px;
+    padding: 16px;
 }
 
 /* Header */
@@ -337,6 +372,11 @@ onBeforeUnmount(() => destroyCharts())
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.title-wrap {
+    min-width: 0;
 }
 
 .page-title {
@@ -348,7 +388,7 @@ onBeforeUnmount(() => destroyCharts())
 .breadcrumb span {
     font-size: 14px;
     color: var(--main-text-color);
-    margin: 0 4px;
+    margin-right: 4px;
 }
 
 .actions {
@@ -369,24 +409,21 @@ onBeforeUnmount(() => destroyCharts())
     font-weight: 700;
 }
 
-.control-button.outline:hover {
-    filter: brightness(0.95);
-}
-
-/* KPIs */
+/* KPI Grid: responsive cards */
 .kpi-strip {
     display: grid;
-    grid-template-columns: repeat(6, minmax(130px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    /* auto-fit for responsive wrap */
+    gap: 12px;
     margin-top: 6px;
 }
 
 .kpi-card {
     background: var(--card-bg, rgba(255, 255, 255, 0.04));
     border: 1px solid var(--header-border-color);
-    border-radius: 10px;
-    padding: 10px 12px;
-    min-height: 60px;
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 72px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -398,12 +435,12 @@ onBeforeUnmount(() => destroyCharts())
 }
 
 .kpi-value {
-    font-size: 20px;
-    font-weight: 700;
-    margin-top: 4px;
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 6px;
 }
 
-/* Controls */
+/* Filters */
 .controls {
     margin: 16px 0 12px;
 }
@@ -460,10 +497,20 @@ onBeforeUnmount(() => destroyCharts())
     padding: 14px;
 }
 
-/* Tables */
+/* Tables (desktop/tablet) */
+.table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 640px;
+}
+
+.table.minwide {
+    min-width: 760px;
 }
 
 .table th,
@@ -475,10 +522,104 @@ onBeforeUnmount(() => destroyCharts())
 .table th {
     text-align: left;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .table .num {
     text-align: right;
+}
+
+/* Mobile cards for tables */
+.cards-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+/* Region summary card */
+.summary-card {
+    border: 1px solid var(--header-border-color);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.04));
+}
+
+.summary-title {
+    font-weight: 800;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.summary-item .label {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.summary-item .value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+/* Top 10 card */
+.busy-card {
+    border: 1px solid var(--header-border-color);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.04));
+}
+
+.busy-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.busy-header .rank {
+    font-weight: 800;
+}
+
+.busy-header .name {
+    font-weight: 700;
+    flex: 1;
+    min-width: 0;
+}
+
+.busy-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 6px 0 10px;
+}
+
+.tag {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--header-border-color);
+}
+
+.busy-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.busy-metrics .label {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.busy-metrics .value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 2px;
 }
 
 .muted {
@@ -490,9 +631,8 @@ onBeforeUnmount(() => destroyCharts())
 /* Charts */
 .charts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
-    margin-bottom: 16px;
 }
 
 .chart-card {
@@ -504,16 +644,21 @@ onBeforeUnmount(() => destroyCharts())
     border-bottom: 1px solid var(--header-border-color);
 }
 
-.chart-card .panel-body {
-    height: 260px;
+.chart-body {
+    height: 280px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .kpi-strip {
-        grid-template-columns: repeat(3, 1fr);
-    }
+/* Visibility helpers */
+.hide-on-mobile {
+    display: block;
+}
 
+.show-on-mobile {
+    display: none;
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
     .controls-row {
         grid-template-columns: 1fr;
     }
@@ -521,11 +666,35 @@ onBeforeUnmount(() => destroyCharts())
 
 @media (max-width: 768px) {
     .analytics-container {
-        padding: 10px;
+        padding: 12px;
+    }
+
+    .page-title {
+        font-size: 20px;
     }
 
     .kpi-strip {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .busy-metrics {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .chart-body {
+        height: 240px;
+    }
+
+    .hide-on-mobile {
+        display: none;
+    }
+
+    .show-on-mobile {
+        display: block;
     }
 }
 </style>
@@ -534,6 +703,7 @@ onBeforeUnmount(() => destroyCharts())
 /* Dark-mode overrides */
 body.dark-mode .analytics-container {
     background: var(--main-bg-color);
+    color: white;
 }
 
 body.dark-mode .page-title,

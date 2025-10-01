@@ -4,7 +4,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <div>
-                <h2 class="page-title">Singapore Toilets Dashboard</h2>
+                <h2 class="page-title">NParks Toilets Dashboard</h2>
                 <nav class="breadcrumb">
                     <span>Cavill</span> &gt;
                     <span>Menu</span> &gt;
@@ -651,6 +651,7 @@ onBeforeUnmount(() => { if (mockTimer) clearInterval(mockTimer) })
 /* Dark-mode overrides */
 body.dark-mode .dashboard-container {
     background: var(--main-bg-color);
+    color: white;
 }
 
 body.dark-mode .page-title,

@@ -12,7 +12,7 @@
                 <span class="menu-title">MENU</span>
                 <ul class="menu">
                     <li>
-                        <router-link to="/" class="menu-link" @click="$emit('toggle-sidebar')">
+                        <router-link to="/" class="menu-link" @click="onLinkClick">
                             <i class="fas fa-home"></i>
                             <span class="link-text">Homepage</span>
                         </router-link>
@@ -24,7 +24,7 @@
                 <span class="menu-title">Analytics</span>
                 <ul class="menu">
                     <li>
-                        <router-link to="/analytics" class="menu-link" @click="$emit('toggle-sidebar')">
+                        <router-link to="/analytics" class="menu-link" @click="onLinkClick">
                             <i class="fas fa-tint"></i>
                             <span class="link-text">Analytics</span>
                         </router-link>
@@ -36,7 +36,10 @@
 </template>
 
 <script setup>
-const props = defineProps({ collapsed: Boolean })
+defineProps({ collapsed: Boolean })
+const emit = defineEmits(['toggle-sidebar'])
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches
+function onLinkClick() { if (isMobile()) emit('toggle-sidebar') } // close drawer only on mobile
 </script>
 
 <style scoped>
@@ -52,27 +55,13 @@ const props = defineProps({ collapsed: Boolean })
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transition: width 0.3s, transform 0.3s;
     overflow: hidden;
+    z-index: 2000;
 }
 
 .app-sidebar.collapsed {
     width: 5%;
 }
 
-/* Remove spacing between sections when collapsed */
-.app-sidebar.collapsed .menu-section {
-    margin-bottom: 0;
-}
-
-/* Only hide text/titles on desktop when collapsed */
-@media (min-width: 769px) {
-
-    .app-sidebar.collapsed .link-text,
-    .app-sidebar.collapsed .menu-title {
-        display: none;
-    }
-}
-
-/* Spacing and layout */
 .menu-section {
     margin-bottom: 32px;
 }
@@ -107,7 +96,6 @@ const props = defineProps({ collapsed: Boolean })
     color: var(--sidebar-text-color);
 }
 
-/* Logo & titles */
 .logo-section {
     text-align: center;
     margin-bottom: 32px;
@@ -126,18 +114,54 @@ const props = defineProps({ collapsed: Boolean })
     text-transform: uppercase;
 }
 
-.app-sidebar.collapsed .menu-link {
-    justify-content: center;
-    padding: 12px 0;
-}
-
 .link-text {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Close “×” button: hidden desktop, visible mobile */
+.app-sidebar.collapsed .menu-section {
+    margin-bottom: 0;
+    margin-top: 24%;
+}
+
+/* ---- Desktop-only collapsed rail behavior (HIDE TEXT) ---- */
+@media (min-width: 769px) {
+
+    .app-sidebar.collapsed .menu-title,
+    .app-sidebar.collapsed .link-text {
+        display: none;
+        /* hide labels in rail */
+    }
+
+    .app-sidebar.collapsed .menu-link {
+        justify-content: center;
+        /* center icons */
+        padding: 12px 0;
+        /* tighter padding */
+    }
+
+    .app-sidebar.collapsed .menu-link i {
+        margin-right: 0;
+        /* remove gap since text is hidden */
+    }
+
+    .app-sidebar.collapsed .router-link-active {
+        border-left: 0;
+        /* remove active left bar in rail */
+        padding-left: 0;
+    }
+
+    .app-sidebar.collapsed .logo {
+        height: 40px;
+    }
+
+    .app-sidebar.collapsed .logo-section {
+        margin-bottom: 16px;
+    }
+}
+
+/* ---- Mobile drawer ---- */
 .close-btn {
     display: none;
 }
@@ -146,7 +170,6 @@ const props = defineProps({ collapsed: Boolean })
     .app-sidebar {
         transform: translateX(-100%);
         width: 0;
-        z-index: 1000;
     }
 
     .app-sidebar.collapsed {
@@ -172,7 +195,7 @@ const props = defineProps({ collapsed: Boolean })
         display: block !important;
     }
 
-    .app-sidebar.collapsed .menu-link[data-v-6dec5f19] {
+    .app-sidebar.collapsed .menu-link {
         justify-content: left;
         padding: 16px 16px;
     }

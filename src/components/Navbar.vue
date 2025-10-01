@@ -1,17 +1,19 @@
 <template>
     <header :class="['app-header', { collapsed }]">
-        <button class="hamburger-menu" @click="$emit('toggle-sidebar')">
+        <button class="hamburger-menu" @click="$emit('toggle-sidebar')" title="Menu">
             <i class="fas fa-bars"></i>
         </button>
+
         <div class="flex-spacer"></div>
+
         <div class="header-right">
-            <button class="header-icon" @click="toggleFullScreen">
+            <button class="header-icon" @click="toggleFullScreen" title="Fullscreen">
                 <i class="fas fa-expand"></i>
             </button>
-            <button class="header-icon" @click="toggleTheme">
+            <button class="header-icon" @click="toggleTheme" title="Toggle theme">
                 <i :class="isDarkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
             </button>
-            <button class="header-icon user-icon">
+            <button class="header-icon user-icon" title="Account">
                 <i class="fas fa-user"></i>
             </button>
         </div>
@@ -20,16 +22,16 @@
 
 <script setup>
 import { ref } from 'vue'
-const props = defineProps({ collapsed: Boolean })
-const isDarkMode = ref(false)
+defineProps({ collapsed: { type: Boolean, default: false } })
 
+const isDarkMode = ref(false)
 function toggleTheme() {
     isDarkMode.value = !isDarkMode.value
     document.body.classList.toggle('dark-mode', isDarkMode.value)
 }
 function toggleFullScreen() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen()
-    else if (document.exitFullscreen) document.exitFullscreen()
+    else document.exitFullscreen?.()
 }
 </script>
 
@@ -89,7 +91,7 @@ function toggleFullScreen() {
     font-size: 20px;
 }
 
-/* Mobile: full-width header */
+/* Mobile: header spans full width */
 @media (max-width: 768px) {
     .app-header {
         left: 0 !important;
