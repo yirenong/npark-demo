@@ -4,7 +4,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <div>
-                <h2 class="page-title">NParks Toilets Dashboard</h2>
+                <h2 class="page-title">Toilets Dashboard</h2>
                 <nav class="breadcrumb">
                     <span>Cavill</span> &gt;
                     <span>Menu</span> &gt;

@@ -31,6 +31,18 @@
                     </li>
                 </ul>
             </div>
+
+            <div class="menu-section">
+                <span class="menu-title">Threshold</span>
+                <ul class="menu">
+                    <li>
+                        <router-link to="/threshold" class="menu-link" @click="onLinkClick">
+                            <i class="fas fa-tint"></i>
+                            <span class="link-text">Threshold</span>
+                        </router-link>
+                    </li>
+                </ul>
+            </div>
         </nav>
     </aside>
 </template>
